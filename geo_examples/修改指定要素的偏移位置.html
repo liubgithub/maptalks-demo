@@ -1,0 +1,115 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>修改指定要素的偏移位置</title>
+    <meta charset="utf-8" />
+    <style type="text/css">
+        html, body {
+            margin: 0px;background-color:black;
+            height: 100%;
+            width: 100%;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <script src="../maptalks.js"></script>
+    <script src="../js/jquery-1.9.1.js"></script>
+    <script type="text/javascript">
+        var map;
+        function initMap() {
+            map = new maptalks.Map("map", {
+                center: [109.20749554050774, 34.36776742218806],//[109.20749554050774, 34.36776742218806], //[175.27, -37.79],
+                zoom: 3,
+                minZoom: 1,
+                maxZoom: 10,
+                view: {
+                    projection: 'EPSG:4326',
+                    resolutions: [
+                       0.0013748335334806893,
+                       0.0006874167667403447,
+                       3.4370838337017233E-4,
+                       1.7185419168508616E-4,
+                       8.592709584254308E-5,
+                       4.296354792127154E-5,
+                       2.148177396063577E-5,
+                       1.0740886980317885E-5,
+                       5.370443490158943E-6,
+                       2.684032014576556E-6
+                    ],
+                    fullExtent: {
+                        'top': 90,
+                        'bottom': 0,
+                        'left': 0,
+                        'right': 180
+                    }
+                },
+                baseLayer: new maptalks.TileLayer("tile", {
+                    tileSystem: [1, -1, -400, 400],
+                    urlTemplate: 'http://116.211.31.253:8712/ArcGIS/rest/services/lt/NewBlue/MapServer/tile/{z}/{y}/{x}',
+                    subdomains: ['1', '2', '3', '4', '5']
+                })
+            });
+        }
+
+        $(function () {
+            initMap();
+            var layer = new maptalks.VectorLayer('v');
+            map.addLayer(layer);
+            new maptalks.Circle([109.20749554050774, 34.36776742218806], 90, {
+                symbol: [  {
+                    'textName' : '起始位置',
+                    'textVerticalAlignment' : 'bottom'
+                },
+                 {
+                'lineColor': '#000000',
+                'lineWidth': 1,
+                'lineOpacity': 1,
+                'polygonFill': '#ffff00',
+                'polygonOpacity': 1
+            }],
+            draggable: true
+        }
+        ).addTo(layer);
+             //图像标注
+            var marker = new maptalks.Marker([109.20749554050774, 34.36776742218806],
+             {
+                 draggable: false,
+                 symbol: [
+              {
+                  'markerFile': '../images/marker-icon.png',
+              },
+              {
+                  'markerFile': '../images/marker-shadow.png',
+                  'markerDx': 8
+              }]
+             });
+            marker.addTo(layer);
+            $("#change").click(function (e) {
+                var _offsetX=document.getElementById("offsetX").value;
+                var _offsetY = document.getElementById("offsetY").value;
+                marker.setSymbol([{
+                    'markerFile': '../images/marker-icon.png',
+                    'markerDx': parseInt(_offsetX),
+                    'markerDy':parseInt(_offsetY)
+                },
+              {
+                  'markerFile': '../images/marker-shadow.png',
+                  'markerDx':parseInt(_offsetX) + 8,
+                  'markerDy':parseInt(_offsetY)
+              }]);
+            });
+           });
+    </script>
+</head>
+<body>设置X方向偏移量：
+    <input type="text" id="offsetX" style="width:100px" />
+    设置Y方向偏移量：
+    <input type="text" id="offsetY" style="width:100px" />
+    <input type="button" id="change" style="width:60px;margin-left:15px;height:25px" value="修改"/>
+    <div id="map"></div>
+</body>
+</html>

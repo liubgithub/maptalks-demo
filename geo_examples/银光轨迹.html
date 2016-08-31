@@ -1,0 +1,174 @@
+﻿<html>
+<head>
+    <meta charset="utf-8">
+    <style type="text/css">
+        body {
+            margin: 0;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+<body style="background-color:black">
+    <div id="map"></div>
+    <script src="../js/echarts.js"></script>
+    <script src="../js/jquery-1.7.2.min.js"></script>
+    <script src="../maptalks.js"></script>
+    <script src="../maptalks.e2.js"></script>
+    <script src="../test_data/bus.js"></script>
+    <script type="text/javascript">
+        var map;
+        var options = {
+            series: []
+        }
+        //配置引用库路径
+            require.config({
+                paths: {
+                    echarts: '../js'
+                }
+            });
+            require([
+                    'echarts','echarts/chart/map'],function (ec) {
+                     //构造地图类,第一个参数为加载地图的容器，例如div的id
+                    map = new maptalks.Map("map", {
+                        center: [109.20749554050774, 34.36776742218806],//[109.20749554050774, 34.36776742218806], //[175.27, -37.79],
+                        zoom: 3,
+                        minZoom: 1,
+                        maxZoom: 10,
+                        view: {
+                            projection: 'EPSG:4326',
+                            resolutions: [
+                               0.0013748335334806893,
+                               0.0006874167667403447,
+                               3.4370838337017233E-4,
+                               1.7185419168508616E-4,
+                               8.592709584254308E-5,
+                               4.296354792127154E-5,
+                               2.148177396063577E-5,
+                               1.0740886980317885E-5,
+                               5.370443490158943E-6,
+                               2.684032014576556E-6
+                            ],
+                            fullExtent: {
+                                'top': 90,
+                                'bottom': 0,
+                                'left': 0,
+                                'right': 180
+                            }
+                        },
+                        baseLayer: new maptalks.TileLayer("tile", {
+                            tileSystem: [1, -1, -400, 400],
+                            urlTemplate: 'http://116.211.31.253:8712/ArcGIS/rest/services/lt/NewBlue/MapServer/tile/{z}/{y}/{x}',
+                            subdomains: ['1', '2', '3', '4', '5']
+                        }),
+                        zoomBackground:false
+                    });
+                    function getOptions() {
+                        var option = {
+                            name: "订单流向",
+                            type: 'map',
+                            mapType: 'none',
+                            itemStyle: {
+                                normal: {
+                                    borderColor: 'rgba(100,149,237,0.2)',
+                                    borderWidth: 1,
+                                    areaStyle: {
+                                        color: '#1b1b1b'
+                                    }
+                                }
+                            },
+                            data: [{}],
+                            hoverable: false,
+                            clickable: false,
+                            roam: true,
+                            markLine: {
+                                effect: {
+                                    color: 'rgba(204, 246, 255, 0.09)',
+                                    show: true,
+                                    period: 40
+                                },
+                                bundling: {
+                                    enable: true
+                                },
+                                large: true,
+                                smooth: true,
+                                smoothness: 0.1,
+                                symbol: ['none', 'none'],
+                                itemStyle: {
+                                    normal: {
+                                        lineStyle: {
+                                            color: 'rgba(2, 166, 253, 0.05)',
+                                            type: 'solid',
+                                            width: 0.5,
+                                            opacity: 0.5
+                                        }
+                                    }
+                                },
+                                data: []
+                            },
+                            markPoint: {
+                                symbol: 'circle',
+                                symbolSize: 2,
+                                itemStyle: {
+                                    normal: {
+                                        color: 'rgba(255, 0, 0, 0.5)'
+                                        
+                                    }
+                                },
+                                data: []
+                            }
+                        };
+                        return option;
+                    }
+                    //处理一下busdata
+                    for (var p in busdata.allLine) {
+                        busdata.allLine[p].line.forEach(function (o) {
+                            o.singleNum = o.num = 10000 * Math.random();
+                        });
+                    }
+                    function getGeoCoord(name) {
+                        var point = name;
+                        var coord = geoCoordinate[point];
+                        return coord;
+                    }
+                    var data = busdata;
+                    for (var key in data.allLine) {
+                        for (var p in data.allLine[key]) {
+                            var _data = data.allLine;
+                            _data[key][p].forEach(function (value, index) {
+                                _data[key][p][index].num = Number(value.num);
+                            });
+                        }
+                    }
+                    for (var p in data.allLine) {
+                        var option = getOptions();
+                        option.markLine.data = data.allLine[p].line.sort(function (a, b) {
+                            return b.num - a.num
+                        }).slice(0, 50).map(function (line) {
+                            return [{
+                                geoCoord: getGeoCoord(line.start)
+                            }, {
+                                geoCoord: getGeoCoord(line.end)
+                            }]
+                        });
+                        option.markLine.effect.color = data.colors[p].effectColor;
+                        option.markLine.itemStyle.normal.lineStyle.color = data.colors[p].lineColor;
+                        option.markPoint.itemStyle.normal.color = data.colors[p].markerColor;
+                        option.markPoint.data = data.allLine[p].points.map(function (point) {
+                            var geoCoord = getGeoCoord(point.name);
+                            return {
+                                geoCoord: geoCoord
+                            }
+                        });
+                        
+                        options.series.push(option);
+                    }
+                    var routes = new maptalks.E2Layer('e2' + Math.random() * 100, ec, options).addTo(map);
+                }
+            );
+    </script>
+</body>
+</html>

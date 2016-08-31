@@ -1,0 +1,199 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>光晕闪烁效果</title>
+    <meta charset="utf-8" />
+    <style type="text/css">
+        html, body {
+            margin: 0px;background-color:black;
+            height: 100%;
+            width: 100%;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <script src="../maptalks.js"></script>
+    <script src="../maptalks.halolayer.js"></script>
+    <script src="../test_data/realworld.50000.1.js"></script>
+    <script src="../js/jquery-1.9.1.js"></script>
+    <script type="text/javascript">
+        var map, lastMarker;
+        function initMap() {
+            map = new maptalks.Map("map", {
+                center: [109.20749554050774, 34.36776742218806],//[109.20749554050774, 34.36776742218806], //[175.27, -37.79],
+                zoom: 5,
+                minZoom: 1,
+                maxZoom: 10,
+                view: {
+                    projection: 'EPSG:4326',
+                    resolutions: [
+                       0.0013748335334806893,
+                       0.0006874167667403447,
+                       3.4370838337017233E-4,
+                       1.7185419168508616E-4,
+                       8.592709584254308E-5,
+                       4.296354792127154E-5,
+                       2.148177396063577E-5,
+                       1.0740886980317885E-5,
+                       5.370443490158943E-6,
+                       2.684032014576556E-6
+                    ],
+                    fullExtent: {
+                        'top': 90,
+                        'bottom': 0,
+                        'left': 0,
+                        'right': 180
+                    }
+                },
+                baseLayer: new maptalks.TileLayer("tile", {
+                    tileSystem: [1, -1, -400, 400],
+                    urlTemplate: 'http://116.211.31.253:8712/ArcGIS/rest/services/lt/NewBlue/MapServer/tile/{z}/{y}/{x}',
+                    subdomains: ['1', '2', '3', '4', '5']
+                })
+            });
+           }
+            //maptalks.View.loadArcgis('http://116.211.31.253:8712/ArcGIS/rest/services/lt/map2d/MapServer/?f=json', function (err, conf) {
+            //    var view = conf.view;
+            //    view.projection = 'EPSG:4326';
+            //    map = new maptalks.Map("map", {
+            //        center: [109.20749554050774, 34.36776742218806],//[109.20749554050774, 34.36776742218806], //[175.27, -37.79],
+            //        zoom: 3,
+            //        minZoom: 1,
+            //        maxZoom: 10,
+            //        overviewControl : true,
+            //        view: view,
+            //        baseLayer: new maptalks.TileLayer("tile", {
+            //            tileSystem: conf.tileSystem,
+            //            urlTemplate: 'http://116.211.31.253:8712/ArcGIS/rest/services/lt/NewBlue/MapServer/tile/{z}/{y}/{x}',
+            //            subdomains: ['1', '2', '3', '4', '5']
+            //        })
+            //    });
+            //    map.addLayer(markers);
+            //});
+            //}
+        //设置渐变色
+        function getGradient(colors) {
+            return {
+                type: 'radial',
+                colorStops: [
+                  [0.70, 'rgba(' + colors.join() + ', 0.5)'],
+                  [0.30, 'rgba(' + colors.join() + ', 1)'],
+                  [0.20, 'rgba(' + colors.join() + ', 1)'],
+                  [0.00, 'rgba(' + colors.join() + ', 0)']
+                ]
+            };
+        }
+        $(function () {
+            initMap();
+            var flist = document.getElementById('flist');
+            //测试数据，点集合
+            var markerList = [];
+            for (var i = 0; i < 100; i += 1) {
+                var a = addressPoints[i];
+                markerList.push(new maptalks.Marker([a[1] - 66.06, -a[0] - 3.39], {
+                    id:'marker_'+i,
+                    properties: {
+                        count: Math.random() * 100,
+                    }
+                }));
+                var _option = document.createElement('option');
+                _option.value = _option.innerText = 'marker_' + i;
+                flist.appendChild(_option);
+            }
+
+            markers = new maptalks.HaloLayer('halo', markerList, {
+                'haloProperty': 'count',
+                'symbol': {
+                    'markerFill': {
+                        property: 'count',
+                        type: 'interval',
+                        stops: [
+                            [0, getGradient([135, 196, 240])],
+                            [20, getGradient([255, 255, 0])],
+                            [50, getGradient([255, 115, 149])],
+                        ]
+                    },
+                    'markerFillOpacity': 0.8,
+                    'markerWidth': {
+                        property: 'count',
+                        type: 'interval',
+                        stops: [[0, 25], [10, 60], [25, 80]]
+                    }
+                }
+            });
+            map.addLayer(markers);
+            //增加新的点,每次新增的点在地图中心
+            $("#addNew").click(function () {
+                var _newMaker = new maptalks.Marker([map.getCenter().x, map.getCenter().y], {
+                    id:'add_'+parseInt(Math.random()*1000).toString(),
+                    properties: {
+                        count: Math.random() * 100,
+                    }
+                })
+                markerList.push(_newMaker);
+                markers.addGeometry([_newMaker]);
+                //markers = new maptalks.HaloLayer('halo', markerList, {
+                //    'haloProperty': 'count',
+                //    'symbol': {
+                //        'markerFill': {
+                //            property: 'count',
+                //            type: 'interval',
+                //            stops: [
+                //                [0, getGradient([135, 196, 240])],
+                //                [20, getGradient([255, 255, 0])],
+                //                [50, getGradient([255, 115, 149])],
+                //            ]
+                //        },
+                //        'markerFillOpacity': 0.8,
+                //        'markerWidth': {
+                //            property: 'count',
+                //            type: 'interval',
+                //            stops: [[0, 25], [10, 60], [25, 80]]
+                //        }
+                //    }
+                //});
+                var _option = document.createElement('option');
+                //获取要素点的id值
+                _option.value = _option.innerText = _newMaker.getId();
+                flist.appendChild(_option);
+                markers.redraw();
+            });
+
+            $("#getOne").click(function () {
+                if (lastMarker)
+                    lastMarker.setSymbol(null);
+                //根据id获取要素点对象
+                var m = markers.getGeometryById(flist.value);
+                m.setSymbol({
+                    'markerType': 'ellipse',
+                    'markerFill': {
+                        property: 'count',
+                        type: 'interval',
+                        stops: [
+                            [0, getGradient([255, 0, 0])],
+                            [20, getGradient([255, 0, 0])],
+                            [50, getGradient([255, 0, 0])]
+                        ]
+                    },
+                    'markerFillOpacity': 1,
+                    'markerWidth': 50,
+                    'markerHeight': 50
+                });
+                lastMarker = m;
+                //重绘一次
+                markers.redraw();
+                map.panTo(m.getCenter());
+            });
+        });
+    </script>
+</head>
+<body style="background-color:black">
+    要素列表：<select id="flist" style="width:100px"></select>
+    <input type="button" id="getOne" style="width:75px" value="获取该要素点" />
+    <input type="button" id="addNew" style="width:75px" value="增加新的要素" />
+    <div id="map"></div>
+</body>
+</html>

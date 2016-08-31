@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+    <link rel="stylesheet" href="../../../../../css/maptalks.css">
+    <script type="text/javascript" src="../../../../../maptalks.js"></script>
+      <style>
+        
+html,
+body {
+    margin: 0px;background-color:black
+    height: 100%;
+    width: 100%;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+}
+      </style>
+    <title>Map controls - Add scale control to the map</title>
+  </head>
+  <body style="background-color:black">
+    
+<div id="map"></div>
+    <script>
+      
+var map = new maptalks.Map('map', {
+  center: [121.48542888885189, 31.228541533313702],
+  zoom: 14,
+  scaleControl: {
+    'position'  : maptalks.Control['top_left'],
+    'maxWidth': 100,
+    'metric': true,
+    'imperial': true
+  },
+  baseLayer: new maptalks.TileLayer('base', {
+    urlTemplate: 'http://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer/tile/{z}/{y}/{x}',
+    subdomains: [1, 2, 3, 4]
+  })
+});
+
+var metric = new maptalks.control.Scale({
+  'position'  : maptalks.Control['top_right'],
+  'maxWidth': 150,
+  'metric': true,
+  'imperial': false
+});
+map.addControl(metric);
+
+var imperial = new maptalks.control.Scale({
+  'position'  : maptalks.Control['bottom_right'],
+  'maxWidth': 200,
+  'metric': false,
+  'imperial': true
+});
+map.addControl(imperial);
+
+    </script>
+  </body>
+</html>

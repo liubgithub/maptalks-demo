@@ -1,0 +1,221 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>北京数据叠加到临潼</title>
+    <meta charset="utf-8" />
+    <link href="../css/maptalks.css" rel="stylesheet" />
+    <style type="text/css">
+        html, body {
+            margin: 0px;
+            background-color: black;
+            height: 100%;
+            width: 100%;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <script src="../maptalks.js"></script>
+    <script src="../maptalks.e3.js"></script>
+    <script src="../js/echarts.min.js"></script>
+    <script src="../js/jquery-1.9.1.js"></script>
+    <script type="text/javascript">
+        var map, vlayer;
+        var _x = 116.38805555 - 109.20749554050774;
+        var _y = 39.9075 - 34.36776742218806;
+        function initMap() {
+            map = new maptalks.Map("map", {
+                center: [109.20749554050774, 34.36776742218806],//[109.20749554050774, 34.36776742218806], //[175.27, -37.79],
+                zoom: 3,
+                minZoom: 1,
+                maxZoom: 10,
+                view: {
+                    projection: 'EPSG:4326',
+                    resolutions: [
+                       0.0013748335334806893,
+                       0.0006874167667403447,
+                       3.4370838337017233E-4,
+                       1.7185419168508616E-4,
+                       8.592709584254308E-5,
+                       4.296354792127154E-5,
+                       2.148177396063577E-5,
+                       1.0740886980317885E-5,
+                       5.370443490158943E-6,
+                       2.684032014576556E-6
+                    ],
+                    fullExtent: {
+                        'top': 90,
+                        'bottom': 0,
+                        'left': 0,
+                        'right': 180
+                    }
+                },
+                baseLayer: new maptalks.TileLayer("tile", {
+                    tileSystem: [1, -1, -400, 400],
+                    urlTemplate: 'http://116.211.31.253:8712/ArcGIS/rest/services/lt/NewBlue/MapServer/tile/{z}/{y}/{x}',
+                    subdomains: ['1', '2', '3', '4', '5']
+                })
+            });
+        }
+        var Lines = [];
+        var coordinates = [];
+        var lineStyle = {
+            normal: { color: echarts.color.modifyHSL('#5A94DF', Math.round(100)) }
+        }
+        var clickEvent = function (e) {
+            if (e.domEvent.button == 1 || e.domEvent.button == 2) return;
+            var _clickPoint = e.coordinate;
+            console.log("x:" + _clickPoint.x + " , " + _clickPoint.y);
+            // 图片标注
+            var marker = new maptalks.Marker(
+                 [_clickPoint.x, _clickPoint.y],
+                 {
+                     draggable: false,
+                     symbol: [{
+                      'textName': '测试点',
+                      'textVerticalAlignment': 'bottom'
+                  },{
+                      'markerFile': '../images/marker-icon.png'
+                  },{
+                      'markerFile': '../images/marker-shadow.png'
+                  }]
+                 }
+             );
+            vlayer.addGeometry(marker);
+            coordinates.push([_clickPoint.x, _clickPoint.y]);
+        }
+        var loadJSONAndDraw = function () {
+            $.ajax({
+                url: '../test_data/lines-bus.js',
+                type: 'GET',
+                dataType: "json",
+                success:function (data) {
+                    var hStep = 300 / (data.length - 1);
+                    var busLines = [].concat.apply([], data.map(function (busLine, idx) {
+                        var prevPt;
+                        var points = [];
+                        for (var i = 0; i < busLine.length; i += 2) {
+                            var pt = [busLine[i], busLine[i + 1]];
+                            if (i > 0) {
+                                pt = [
+                                    prevPt[0] + pt[0],
+                                    prevPt[1] + pt[1]//39.9075
+                                ];
+                            }
+                            prevPt = pt;
+
+                            points.push([pt[0] / 1e4 - _x, pt[1] / 1e4 - _y]);
+                        }
+                        return {
+                            coords: points,
+                            lineStyle: {
+                                normal: {
+                                    color: echarts.color.modifyHSL('#5A94DF', Math.round(hStep * idx))
+                                }
+                            }
+                        };
+                    }));
+                    var option = {
+                        series: [{
+                            type: 'lines',
+                            coordinateSystem: 'bmap',
+                            polyline: true,
+                            data: busLines,
+                            silent: true,
+                            lineStyle: {
+                                normal: {
+                                    // color: '#c23531',
+                                    // color: 'rgb(200, 35, 45)',
+                                    opacity: 0.2,
+                                    width: 1
+                                }
+                            },
+                            progressiveThreshold: 500,
+                            progressive: 200
+                        }, {
+                            type: 'lines',
+                            coordinateSystem: 'bmap',
+                            polyline: true,
+                            data: busLines,
+                            lineStyle: {
+                                normal: {
+                                    width: 0
+                                }
+                            },
+                            effect: {
+                                constantSpeed: 20,
+                                show: true,
+                                trailLength: 0.1,
+                                symbolSize: 1.5
+                            },
+                            zlevel: 1
+                        }]
+                    };
+                    var e2Layer = new maptalks.E3Layer('e3', option).addTo(map);
+                }
+            })
+        };
+      var produceData=function(){
+                vlayer = new maptalks.VectorLayer("v").addTo(map);
+                map.on('click', clickEvent);
+                var option = {
+                    series: [{
+                        type: 'lines',
+                        coordinateSystem: 'bmap',
+                        polyline: true,
+                        data: null,
+                        silent: true,
+                        lineStyle: {
+                            normal: {
+                                // color: '#c23531',
+                                // color: 'rgb(200, 35, 45)',
+                                opacity: 0.2,
+                                width: 1
+                            }
+                        },
+                        progressiveThreshold: 500,
+                        progressive: 200
+                    }, {
+                        type: 'lines',
+                        coordinateSystem: 'bmap',
+                        polyline: true,
+                        data: null,
+                        lineStyle: {
+                            normal: {
+                                width: 0
+                            }
+                        },
+                        effect: {
+                            constantSpeed: 20,
+                            show: true,
+                            trailLength: 0.1,
+                            symbolSize: 1.5
+                        },
+                        zlevel: 1
+                    }]
+                };
+                $("#e3layer").click(function (e) {
+                    Lines.push({
+                        coords: coordinates,
+                        lineStyle: lineStyle
+                    });
+                    option.series.forEach(function (item) {
+                        item.data = Lines;
+                    });
+                    var e2Layer = new maptalks.E3Layer('e3', option).addTo(map);
+                });
+            }
+        $(function () {
+            initMap();
+            //produceData();
+            loadJSONAndDraw();
+        });
+    </script>
+</head>
+<body>
+    <div id="map"></div>
+</body>
+</html>

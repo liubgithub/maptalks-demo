@@ -1,0 +1,57 @@
+﻿.halo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+}
+.halo:before,
+.halo:after {
+  content: '';
+  display: block;
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  left: -30px;
+  top: -30px;
+  border-radius: 15px;
+  animation-name: Grow;
+  animation-duration: 2s;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease;
+  /* Safari and Chrome */
+
+  -webkit-animation-name: Grow;
+  -webkit-animation-duration: 2s;
+  -webkit-animation-iteration-count: infinite;
+  -webkit-animation-timing-function: linear;
+}
+.halo:before {
+  box-shadow: 0px 0px 15px 5px #FF6A6A;
+}
+.halo:after {
+  box-shadow: inset 0px 0px 15px 5px #FF6A6A;
+}
+@-webkit-keyframes Grow {
+  0% {
+    transform: scale(0.1);
+    -ms-transform: scale(0.1);
+    /* IE 9 */
+  
+    -webkit-transform: scale(0.1);
+    /* Safari and Chrome */
+  
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    -ms-transform: scale(1);
+    /* IE 9 */
+  
+    -webkit-transform: scale(1);
+    /* Safari and Chrome */
+  
+    opacity: 0.2;
+  }
+}

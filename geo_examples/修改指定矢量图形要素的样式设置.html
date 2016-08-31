@@ -1,0 +1,127 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>地图标注</title>
+    <meta charset="utf-8" />
+    <style type="text/css">
+        html, body {
+            margin: 0px;background-color:black;
+            height: 100%;
+            width: 100%;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <script src="../maptalks.js"></script>
+    <script src="../js/jquery-1.9.1.js"></script>
+    <script type="text/javascript">
+        var map;
+        function initMap() {
+            map = new maptalks.Map("map", {
+                center: [109.20749554050774, 34.36776742218806],//[109.20749554050774, 34.36776742218806], //[175.27, -37.79],
+                zoom: 3,
+                minZoom: 1,
+                maxZoom: 10,
+                view: {
+                    projection: 'EPSG:4326',
+                    resolutions: [
+                       0.0013748335334806893,
+                       0.0006874167667403447,
+                       3.4370838337017233E-4,
+                       1.7185419168508616E-4,
+                       8.592709584254308E-5,
+                       4.296354792127154E-5,
+                       2.148177396063577E-5,
+                       1.0740886980317885E-5,
+                       5.370443490158943E-6,
+                       2.684032014576556E-6
+                    ],
+                    fullExtent: {
+                        'top': 90,
+                        'bottom': 0,
+                        'left': 0,
+                        'right': 180
+                    }
+                },
+                baseLayer: new maptalks.TileLayer("tile", {
+                    tileSystem: [1, -1, -400, 400],
+                    urlTemplate: 'http://116.211.31.253:8712/ArcGIS/rest/services/lt/NewBlue/MapServer/tile/{z}/{y}/{x}',
+                    subdomains: ['1', '2', '3', '4', '5']
+                })
+            });
+        }
+        $(function () {
+            initMap();
+            var layer = new maptalks.VectorLayer('v');
+            map.addLayer(layer);
+            // 图片标注
+            // 多边形
+           var polygon =new maptalks.Polygon(
+                    //面端点坐标数组
+                    [[
+                         [109.19053653961283, 34.37244899384889],
+                         [109.20049362426856, 34.358559229494186],
+                         [109.22032123809872, 34.346210614999653],
+                         [109.22366863494917, 34.362926029397037],
+                         [109.23577221160967, 34.353880093267567],
+                         [109.23053653961283, 34.41244899384889]
+                    ]],
+                    {
+                        draggable: false,
+                        symbol: {
+                            'lineColor': '#000000',
+                            'lineWidth': 2,
+                            'lineOpacity': 0.8,
+                            'polygonFill': 'rgb(255, 0, 0)',
+                            'polygonOpacity': 0.6
+                        }
+                    });
+           $('#changeStyle').click(function (e) {
+               polygon.setSymbol({
+                       'lineColor': document.getElementById('lineColor').value,
+                       'lineWidth': document.getElementById('lineWidth').value,
+                       'lineOpacity': 0.8,
+                       'polygonFill': document.getElementById('fillColor').value,
+                       'polygonOpacity': document.getElementById('fillOpacity').value
+               })
+           })
+           polygon.addTo(layer);
+           });
+    </script>
+</head>
+<body>
+    边线颜色：<select id="lineColor" style="width:100px;">
+    <option value="#D15FEE">紫色</option>
+    <option value="#C0FF3E">青色</option>
+    <option value="#63B8FF">天蓝色</option>
+    <option value="#EE3B3B">深红色</option>
+    <option value="#EEEE00">黄色</option>
+    </select>
+    边线宽：<select id="lineWidth" style="width:75px;">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+    </select>
+    填充区透明度：<select id="fillOpacity" style="width:100px">
+        <option value="1">1</option>
+        <option value="0.9">0.9</option>
+        <option value="0.8">0.8</option>
+        <option value="0.7">0.7</option>
+        <option value="0.6">0.6</option>
+    </select>
+    填充色：<select id="fillColor" style="width:100px">
+           <option value="#63B8FF">天蓝色</option>
+           <option value="#EEEE00">黄色</option>
+           <option value="#D15FEE">紫色</option>
+           <option value="#C0FF3E">青色</option>
+           <option value="#EE3B3B">深红色</option>
+    </select>
+    <input id="changeStyle" type="button" style="width:100px;height:30px" value="更改要素样式"/>
+    <div id="map"></div>
+</body>
+</html>

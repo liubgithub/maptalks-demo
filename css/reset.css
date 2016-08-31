@@ -1,0 +1,105 @@
+﻿/*******************************************************************
+ 文件名：reset.css
+ 说  明：浏览器渲染样式重置，避免不同浏览器初始值不同
+ 版  本：v1.0.0
+ 作  者：潘杰
+ 日  期：2010-5-1 16:15:07
+ 修  改：-
+ 版  权：2009-2010 (C) PJtools
+ 备  注：主流浏览器CSS Hack方法(写法按排序先后)
+		 body {
+			color: #333333;   for firefox
+			color: #333333\0; for IE8
+			*color: #333333;  for IE7
+			_color: #333333;  for IE6
+		 }
+*******************************************************************/
+
+
+*, html
+{
+	color: #333;
+	font-size: 12px;
+	font-family: '新宋体', Arial, Tahoma;
+	font-weight: normal;
+	letter-spacing: 0px;
+}
+body, div, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, pre, code, form, fieldset, legend, input, textarea, p, blockquote, th, td
+{
+	margin: 0;
+	padding: 0;
+}
+img, fieldset
+{
+	border-style: none;
+}
+ul
+{
+	padding: 0;
+	margin: 0;
+	list-style-type: none;
+}
+ul li
+{
+	padding: 0;
+	margin: 0;
+	list-style-type: none;
+}
+a, a:link, a:visited
+{
+	color: #333;
+	text-decoration: none;
+}
+a:hover
+{
+	color: #333;
+	text-decoration: underline;
+}
+table
+{
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+address, caption, cite, code, dfn, em, strong, th, var
+{
+	font-style: normal;
+	font-weight: normal;
+}
+caption, th
+{
+	text-align: left;
+}
+/*添加空字符清除融合*/
+q:before, q:after
+{
+	content: '';
+}
+abbr, acronym
+{
+	border: 0;
+	font-variant: normal;
+}
+sup
+{
+	vertical-align: text-top;
+}
+sub
+{
+	vertical-align: text-bottom;
+}
+input, textarea, select
+{
+	font-family: inherit;
+	font-size: inherit;
+	font-weight: inherit;
+}
+/*在ie下重定义*/
+input, textarea, select
+{
+	*font-size: 12px;
+}
+/*IE下legend不继承*/
+legend
+{
+	color: #333;
+}

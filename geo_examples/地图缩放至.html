@@ -1,0 +1,135 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>地图缩放至某一级</title>
+	<meta charset="utf-8" />
+    <link href="../css/easyui.css" rel="stylesheet" />
+    <link href="../css/icon.css" rel="stylesheet" />
+    <script src="../js/jquery-1.9.1.js"></script>
+    <script src="../js/jquery.easyui.min.js"></script>
+    <style>
+        html, body {
+            margin: 0px;background-color:black;
+            height: 100%;
+            width: 100%;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+        body {
+            font: 16px/1.4 "Helvetica Neue", Arial, sans-serif;
+        }
+        .ghbtns {
+            position: relative;
+            top: 4px;
+            margin-left: 5px;
+        }
+        a {
+            color: #0077ff;
+        }
+    </style>
+    <script src="../maptalks.js"></script>
+</head>
+<body onload="initMap();">
+    <div class="easyui-layout" style="width:100%;height:100%;">
+        <div id="p" data-options="region:'west'" title="功能列表" style="width:250px;padding:10px">
+            <a id="btnZoom" href="#" class="easyui-linkbutton" iconCls="icon-ok" style="width:100%;height:32px">随机缩放至某一级</a>
+            <a id="btnPanTo" href="#" class="easyui-linkbutton" iconCls="icon-ok" style="width:100%;height:32px;margin-top:10px">地图平移至某点</a>
+            <a id="btnMiniMap" href="#" class="easyui-linkbutton" iconCls="icon-ok" style="width:100%;height:32px;margin-top:10px">鹰眼</a>
+            <a id="btnMapCapture" href="#" class="easyui-linkbutton" iconCls="icon-ok" style="width:100%;height:32px;margin-top:10px">地图截图</a>
+            <a id="btnLRemove" href="#" class="easyui-linkbutton" iconCls="icon-ok" style="width:100%;height:32px;margin-top:10px">图层清除</a>
+        </div>
+        <div data-options="region:'center'" title="地图区域" id="map">
+        </div>
+    </div>
+    <script>
+        var map;
+        function initMap() {
+            map = new maptalks.Map("map", {
+                center: [109.20749554050774, 34.36776742218806],//[109.20749554050774, 34.36776742218806], //[175.27, -37.79],
+                zoom: 3,
+                minZoom: 1,
+                maxZoom: 10,
+                view: {
+                    projection: 'EPSG:4326',
+                    resolutions: [
+                       0.0013748335334806893,
+                       0.0006874167667403447,
+                       3.4370838337017233E-4,
+                       1.7185419168508616E-4,
+                       8.592709584254308E-5,
+                       4.296354792127154E-5,
+                       2.148177396063577E-5,
+                       1.0740886980317885E-5,
+                       5.370443490158943E-6,
+                       2.684032014576556E-6
+                    ],
+                    fullExtent: {
+                        'top': 90,
+                        'bottom': 0,
+                        'left': 0,
+                        'right': 180
+                    }
+                },
+                baseLayer: new maptalks.TileLayer("tile", {
+                    tileSystem: [1, -1, -400, 400],
+                    urlTemplate: 'http://116.211.31.253:8712/ArcGIS/rest/services/lt/NewBlue/MapServer/tile/{z}/{y}/{x}',
+                    subdomains: ['1', '2', '3', '4', '5']
+                })
+            });
+        }
+        //随机缩放至某一级
+        $('#btnZoom').click(function (e) {
+            var _level = Math.ceil(Math.random() * 10);
+            map.setZoom(_level);
+        });
+        //地图平移至某一点
+        $('#btnPanTo').click(function (e) {
+            var _point = [109.30749554050774, 34.46776742218806];
+            map.panTo(_point)
+        });
+        //显示鹰眼地图
+        $('#btnMapCapture').click(function (e) {
+           //TODO
+        });
+
+        //地图截图
+        $('#btnMapCapture').click(function (e) {
+            //TODO
+        });
+        //图层清除
+        $('#btnLRemove').click(function (e) {
+            //TODO
+            var _layer = new maptalks.VectorLayer('v');
+            var _polygon = new maptalks.Polygon(
+         //面端点坐标数组
+              [[
+             [109.20053653961283, 34.36244899384889],
+             [109.20049362426856, 34.358559229494186],
+             [109.21032123809872, 34.356210614999653],
+             [109.21366863494917, 34.362926029397037],
+             [109.20577221160967, 34.363880093267567],
+             [109.20053653961283, 34.36244899384889]
+              ]],
+            {
+             draggable: false,
+             symbol: {
+                 'lineColor': '#000000',
+                 'lineWidth': 2,
+                 'lineOpacity': 1,
+                 'polygonFill': 'rgb(255, 0, 0)',
+                 'polygonOpacity': 0.5
+             }
+            });
+            _polygon.addTo(_layer);
+            //if (!map.getLayer('v'))
+            //    map.addLayer(_layer);
+            //else if (map.getLayer('v'))
+            //    map.removeLayer(map.getLayer('v'));
+            !map.getLayer('v') ? map.addLayer(_layer) : map.removeLayer(map.getLayer('v'))
+        });
+    </script>
+</body>
+</html>

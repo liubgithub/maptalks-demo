@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+    <link rel="stylesheet" href="../../../../../css/maptalks.css">
+    <script type="text/javascript" src="../../../../../maptalks.js"></script>
+      <style>
+        
+html,
+body {
+    margin: 0px;background-color:black
+    height: 100%;
+    width: 100%;
+}
+
+#map {
+    width: 100%;
+    height: 95%;
+}
+
+#action div {
+  width: 33.3333%;
+  height: 22px;
+  float: left;
+}
+
+      </style>
+    <title>Map tools - Draw tool to draw geometries</title>
+  </head>
+  <body style="background-color:black">
+    
+<div id="map"></div>
+<div id="action">
+  <div id="left"></div>
+  <div id="middle">
+    <button type="button" id="point">point</button>
+    <button type="button" id="linestring">linestring</button>
+    <button type="button" id="polygon">polygon</button>
+    <button type="button" id="circle">circle</button>
+    <button type="button" id="ellipse">ellipse</button>
+    <button type="button" id="rectangle">rectangle</button>
+  </div>
+  <div id="right">
+    <button type="button" id="enable">enable</button>
+    <button type="button" id="clear">clear</button>
+  </div>
+</div>
+
+    <script>
+      
+var map = new maptalks.Map('map', {
+  center: [121.48542888885189, 31.228541533313702],
+  zoom: 14,
+  baseLayer: new maptalks.TileLayer('base', {
+    urlTemplate: 'http://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer/tile/{z}/{y}/{x}',
+    subdomains: [1, 2, 3, 4]
+  })
+});
+
+var layer = new maptalks.VectorLayer('vector').addTo(map);
+
+var enabled = false;
+
+var drawTool = new maptalks.DrawTool({
+  mode: 'polygon',
+  symbol: {
+    lineColor: 'orange',
+    lineWidth: 3
+  }
+}).addTo(map).disable();
+
+drawTool.on('drawend', function (param) {
+  layer.addGeometry(param.geometry);
+});
+
+var modeButtonList = Array.prototype.slice.call(document.querySelectorAll('#middle button'));
+modeButtonList.forEach(function (el) {
+  el.addEventListener('click', function () {
+    drawTool.setMode(el.id);
+  });
+});
+
+document.querySelector('#enable').addEventListener('click', function (event) {
+  if (!enabled) {
+    drawTool.enable();
+    event.target.innerHTML = 'disable';
+    enabled = true;
+  } else {
+    drawTool.disable();
+    event.target.innerHTML = 'enable';
+    enabled = false;
+  }
+});
+
+document.querySelector('#clear').addEventListener('click', function () {
+  layer.clear();
+});
+
+    </script>
+  </body>
+</html>

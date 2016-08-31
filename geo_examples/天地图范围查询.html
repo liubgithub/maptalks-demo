@@ -1,0 +1,126 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>指定范围查询</title>
+    <meta charset="utf-8" />
+    <style type="text/css">
+        html, body {
+            margin: 0px;
+            height: 100%;
+            width: 100%;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <script src="../maptalks.js"></script>
+    <script src="../maptalks.featurelayer.js"></script>
+    <script src="../js/jquery-1.9.1.js"></script>
+    <script type="text/javascript">
+        var map;
+        var geoSymbol;
+        function initMap() {
+            map = new maptalks.Map("map", {
+                center: [109.21719861907957, 34.37503957941859],
+                zoom: 15,
+                //maxExtent: { xmin: 121.45212658172605, xmax: 121.56156070953367, ymin: 31.206337136132003, ymax: 31.27693270422681 },
+                //设置底图, 这里用的是天地图底图
+                baseLayer: new maptalks.TileLayer("tile", {
+                    baseLayerRenderer: 'canvas',
+                    crossOrigin: 'Anonymous',
+                    //urlTemplate: 'http://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
+                    urlTemplate: 'http://t{s}.tianditu.com/DataServer?T=vec_w&x={x}&y={y}&l={z}',
+                    subdomains: [1, 2, 3, 4]
+                })
+            });
+        }
+        function bufferQuery(buffer,layer) {
+            var geometries = layer.getGeometries();
+            var len = geometries.length;
+            for (var i = 0; i < len; i++) {
+                var coord = geometries[i].getCoordinates();
+                if (buffer.containsPoint(coord)) {
+                    geometries[i].updateSymbol({
+                        'markerFill': 'rgb(255,0,0)'
+                    });
+                }
+                else
+                    geometries[i].setSymbol(geoSymbol);
+            }
+        }
+
+        $(function () {
+            initMap();
+            var radius = 500;
+            var point = [109.21719861907957, 34.37503957941859];
+            var bufferLayer = new maptalks.VectorLayer("bufferLayer");
+            var drawLyaer = new maptalks.VectorLayer('drawlayer').addTo(map);
+            var drawTool = new maptalks.DrawTool({
+                mode:"Rectangle"
+            }).addTo(map).disable();
+            //cityMap.hide();
+            var buffer = new maptalks.Ellipse(point, radius * 2, radius * 2, {
+                symbol: {
+                    'lineColor': '#87CEFF',
+                    'lineWidth': 1,
+                    'lineOpacity': 1,
+                    'polygonFill': '#B0E2FF',
+                    'polygonOpacity': 0.8
+                },
+                draggable: true
+            }).addTo(bufferLayer);
+            buffer.on("dragend", function (e) {
+                bufferQuery(buffer, cityMap);
+            });
+            var marker = new maptalks.Marker(point,{
+                draggable: false,
+                symbol: [{
+                    'markerFile': '../images/marker-icon.png'
+                }, {
+                    'markerFile': '../images/marker-shadow.png',
+                    'markerDx': 8
+                }]
+            }
+           ).addTo(bufferLayer);
+            map.addLayer(bufferLayer);
+            var cityMap = new maptalks.FeatureLayer('cityMap', "http://116.211.31.253:8712/ArcGIS/rest/services/lt/citymap/MapServer/0");
+            cityMap.on('loadend', function (p) {
+                geoSymbol = p.geometries[0].getSymbol();
+            });
+            cityMap.addTo(map);
+            //范围查询
+            $("#qbtn").click(function () {
+                bufferQuery(buffer, cityMap);
+            });
+            $("#rectbtn").click(function (e) {
+                drawTool.setMode('Rectangle').enable();
+                drawTool.on('drawend', function (param) {
+                    drawLyaer.addGeometry(param.geometry);
+                    bufferQuery(param.geometry, cityMap);
+                    drawTool.disable();
+                });
+            });
+            $("#circlebtn").click(function (e) {
+                drawTool.setMode('Circle').enable();
+                drawTool.on('drawend', function (param) {
+                    drawLyaer.addGeometry(param.geometry);
+                    bufferQuery(param.geometry, cityMap);
+                    drawTool.disable();
+                });
+            });
+            $("#clearbtn").click(function (e) {
+                drawLyaer.clear();
+            })
+        })
+    </script>
+</head>
+<body>
+    <input id="qbtn" type="button" style="width:130px;" value="特定点范围查询" />
+    <input id="rectbtn" type="button" style="width:100px;" value="拉框查询" />
+    <input id="circlebtn" type="button" style="width:100px;" value="圆查询" />
+    <input id="clearbtn" type="button" style="width:100px;" value="清除图形" />
+    <div id="map"></div>
+</body>
+</html>

@@ -1,0 +1,34 @@
+﻿.legend-panel{
+    width:250px;
+    height:180px;
+    border:1px solid #b4b3b3;
+    box-shadow:2px 2px 2px #dbdbdb;
+    background-color:white;
+}
+
+.legend-head{
+    width:100%;
+    height:25px;
+    padding-left:8px;
+    text-align:left;
+    font-size:14px;
+    font-weight:bold;
+    font-family:'Microsoft Himalaya';
+    padding-top:7px;
+    background: #CDCDCD; /* old browsers */
+    background: -moz-linear-gradient(top, #CDCDCA 3%, #CDCBDC 4%, #CDCDCD 100%); /* firefox */
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(3%,#CDCDCA), color-stop(4%,#CDCBDC), color-stop(100%,#CDCDCD)); /* webkit */
+}
+#legendTable{
+    margin-left:10px;
+    margin-top:6px;
+}
+tr{
+    line-height:3px
+}
+.td-color{
+    width:50px;
+    height:20px;
+    padding-top:5px;
+    margin-left:10px;
+}

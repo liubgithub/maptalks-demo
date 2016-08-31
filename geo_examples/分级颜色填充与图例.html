@@ -1,0 +1,161 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>分级颜色填充</title>
+    <meta charset="utf-8" />
+    <style type="text/css">
+        html, body {
+            margin: 0px;
+            background-color: black;
+            height: 100%;
+            width: 100%;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <link href="../css/legend.css" rel="stylesheet" />
+    <link href="../css/progressbar.css" rel="stylesheet" />
+    <link href="../css/maptalks.css" rel="stylesheet" />
+    <script src="../maptalks.js"></script>
+    <script src="../maptalks.featurelayer.js"></script>
+    <script src="../js/jquery-1.9.1.js"></script>
+    <script type="text/javascript">
+        var map;
+        function initMap() {
+            map = new maptalks.Map("map", {
+                center: [109.20749554050774, 34.36776742218806],//[109.20749554050774, 34.36776742218806], //[175.27, -37.79],
+                zoom: 2,
+                minZoom: 1,
+                maxZoom: 10,
+                view: {
+                    projection: 'EPSG:4326',
+                    resolutions: [
+                       0.0013748335334806893,
+                       0.0006874167667403447,
+                       3.4370838337017233E-4,
+                       1.7185419168508616E-4,
+                       8.592709584254308E-5,
+                       4.296354792127154E-5,
+                       2.148177396063577E-5,
+                       1.0740886980317885E-5,
+                       5.370443490158943E-6,
+                       2.684032014576556E-6
+                    ],
+                    fullExtent: {
+                        'top': 90,
+                        'bottom': 0,
+                        'left': 0,
+                        'right': 180
+                    }
+                },
+                baseLayer: new maptalks.TileLayer("tile", {
+                    tileSystem: [1, -1, -400, 400],
+                    urlTemplate: 'http://116.211.31.253:8712/ArcGIS/rest/services/lt/NewBlue/MapServer/tile/{z}/{y}/{x}',
+                    subdomains: ['1', '2', '3', '4', '5']
+                })
+            });
+        }
+        var breakClasses = [{
+            minValue: 0,
+            maxValue: 10000,
+            renderSymbol: {
+                lineColor: '#34595e',
+                lineWidth: 1,
+                polygonFill: '#32CD32',
+                polygonOpacity: 0.8
+            }
+        }, {
+            minValue: 10001,
+            maxValue: 30000,
+            renderSymbol: {
+                lineColor: '#34595e',
+                lineWidth: 1,
+                polygonFill: '#1E90FF',
+                polygonOpacity: 0.8
+            }
+        }, {
+            minValue: 30001,
+            maxValue: 70000,
+            renderSymbol: {
+                lineColor: '#34595e',
+                lineWidth: 1,
+                polygonFill: '#FF7F00',
+                polygonOpacity: 0.8
+            }
+        }, {
+            minValue: 70001,
+            maxValue: 100000,
+            renderSymbol: {
+                lineColor: '#34595e',
+                lineWidth: 1,
+                polygonFill: '#FF0000',
+                polygonOpacity: 0.8
+            }
+        }];
+
+        function addLegend() {
+            var el = '<div class="legend-head">图 例 说 明</div><table id="legendTable" cellspacing="5"></table>';
+            var html = '<div id="legendPanel" class="legend-panel">' + el + '</div>';
+            var legend = new maptalks.control.Panel({
+                'position': { 'bottom': '0', 'right': '0' },
+                'draggable': false,
+                'custom': true,
+                'content': html
+            });
+            map.addControl(legend);
+            var legendPanel = document.getElementById('legendTable');
+            for (var i = 0; i < breakClasses.length; i++) {
+                var tr = document.createElement("tr");
+                var tdColor = document.createElement('td');
+                tdColor.style.backgroundColor = breakClasses[i].renderSymbol.polygonFill;
+                tdColor.className = 'td-color';
+                tr.appendChild(tdColor);
+                var tdInfo = document.createElement("td");
+                tdInfo.innerText ="人口数:"+ breakClasses[i].minValue + "—" + breakClasses[i].maxValue;
+                tr.appendChild(tdInfo);
+                legendPanel.appendChild(tr);
+            }
+        }
+
+        function addProgressbar() {
+            var html = '<div id="caseVerteClaire" class="circleBar"><div id="transform" class="circleBar"><div id="transform1" class="circleBar"></div>' +
+            '<div id="transform2" class="circleBar"></div><div id="transform3" class="circleBar"></div></div><div id="load" class="circleBar"><p>loading</p></div></div>';
+            var mdiv = document.getElementById("map");
+            var mapX = mdiv.clientWidth;
+            var mapY = mdiv.clientHeight;
+            var bar = new maptalks.control.Panel({
+                'position': { 'left': mapX / 2-75, 'top': mapY / 2-75 },
+                'draggable': false,
+                'custom': true,
+                'content': html
+            });
+            return bar;
+        }
+        $(function () {
+            initMap();
+            var probar = addProgressbar();
+            map.addControl(probar);
+            var JSDMap1 = new maptalks.FeatureLayer('JSDMap1', "http://116.211.31.253:8712/ArcGIS/rest/services/lt/JSD/MapServer/1", {
+                displayField: "JDNAME",
+                query: true
+            });
+            JSDMap1.on('loadend', function (geos) {
+                addLegend();
+                map.removeControl(probar);
+            });
+            ////根据属性进行渲染
+            JSDMap1.setRenderProperty("SHAPE_LENG");
+            JSDMap1.setBreakRender(breakClasses);
+            JSDMap1.addTo(map);
+        });
+
+    </script>
+</head>
+<body>
+    <div id="map"></div>
+</body>
+</html>

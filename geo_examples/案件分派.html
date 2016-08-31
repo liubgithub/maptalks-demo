@@ -1,0 +1,336 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>轨迹迁移</title>
+    <meta charset="utf-8" />
+    <link href="../css/maptalks.css" rel="stylesheet" />
+    <link href="../css/mapdemo.css" rel="stylesheet" />
+    <style type="text/css">
+        html, body {
+            margin: 0px;
+            background-color: black;
+            height: 100%;
+            width: 100%;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <script src="../maptalks.js"></script>
+    <script src="../maptalks.e3.js"></script>
+    <script src="../js/echarts.min.js"></script>
+    <script src="../js/jquery-1.9.1.js"></script>
+    <script src="../test_data/case.js"></script>
+    <script type="text/javascript">
+        var map;
+        var e3Layer;
+        var timeControllers = [];
+        var color = ['#50f2ff', '#FF83FA', '#46bee9'];
+        var v = new maptalks.VectorLayer('v');
+        function initMap() {
+            var tilelayer=new maptalks.TileLayer("tile", {
+                tileSystem: [1, -1, -400, 400],
+                urlTemplate: 'http://116.211.31.253:8712/ArcGIS/rest/services/lt/NewBlue/MapServer/tile/{z}/{y}/{x}',
+                subdomains: ['1', '2', '3', '4', '5']
+            });
+            map = new maptalks.Map("map", {
+                center: [109.20749554050774, 34.36776742218806],//[109.20749554050774, 34.36776742218806], //[175.27, -37.79],
+                zoom: 3,
+                minZoom: 1,
+                maxZoom: 10,
+                view: {
+                    projection: 'EPSG:4326',
+                    resolutions: [
+                       0.0013748335334806893,
+                       0.0006874167667403447,
+                       3.4370838337017233E-4,
+                       1.7185419168508616E-4,
+                       8.592709584254308E-5,
+                       4.296354792127154E-5,
+                       2.148177396063577E-5,
+                       1.0740886980317885E-5,
+                       5.370443490158943E-6,
+                       2.684032014576556E-6
+                    ],
+                    fullExtent: {
+                        'top': 90,
+                        'bottom': 0,
+                        'left': 0,
+                        'right': 180
+                    }
+                },
+                zoomBackground:false,
+                baseLayer: tilelayer
+            });
+           map.addLayer(v);
+           e3Layer = new maptalks.E3Layer('e3', getE3Option()).addTo(map);
+        }
+        //动画的执行时长
+        var period = 4;
+        function getE3Option() {
+            var convertData = function (data) {
+                var res = [];
+                for (var i = 0; i < data.length; i++) {
+                    var dataItem = data[i];
+                    var fromCoord = geoCoordMap[dataItem[0].name];
+                    var toCoord = geoCoordMap[dataItem[1].name];
+                    res.push({
+                        fromName: dataItem[0].name,
+                        toName: dataItem[1].name,
+                        coords: [fromCoord, toCoord],
+                    });   
+                }
+                return res;
+            };
+            var series = [];
+            [['骊山街', LSData]].forEach(function (item, i) {
+                series.push(
+                {
+                    name: item[0],
+                    type: 'lines',
+                    zlevel: 1,
+                    effect: {
+                        show: true,
+                        period: period,
+                        trailLength: 0.7,
+                        color: color[i],
+                        symbolSize: 3,
+                        loop:false,
+                        opacity:0
+                    },
+                    lineStyle: {
+                        normal: {
+                            color: color[i],
+                            width: 0,
+                            curveness: 0.2,
+                            opacity:1
+                        }
+                    },
+                    data: convertData(item[1])
+                },
+                {
+                    name: item[0],
+                    type: 'lines',
+                    zlevel: 2,
+                    effect: {
+                        show: true,
+                        period: period,
+                        trailLength: 0,
+                        symbol: "image://../images/send.png",
+                        symbolSize: 15,
+                        loop:false,
+                        opacity:0
+                    },
+                    lineStyle: {
+                        normal: {
+                            color: color[i],
+                            width: 1,
+                            opacity: 0,
+                            curveness: 0.2
+                        }
+                    },
+                    data: convertData(item[1])
+                },
+                {
+                    name: 'marker',
+                    type: 'effectScatter',
+                    coordinateSystem: 'geo',
+                    zlevel: 2,
+                    rippleEffect: {
+                        brushType: 'fill'
+                    },
+                    label: {
+                        normal: {
+                            show: true,
+                            position: 'inside',
+                            formatter: function (item) {
+                                return item.value[2];
+                            },
+                            textStyle: {
+                                color:'#fff'
+                            }
+                        }
+                    },
+                    symbolSize: function (val) {
+                        return 22;
+                    },
+                    itemStyle: {
+                        normal: {
+                            color: color[1]
+                        }
+                    },
+                    data: item[1].map(function (dataItem) {
+                        if (dataItem[1].name == "穆寨街道")
+                            return {
+                                name: dataItem[1].name,
+                                value: geoCoordMap[dataItem[1].name].concat([dataItem[1].value]),
+                                zlevel:1000
+                            }
+                        else
+                        return {
+                            name: dataItem[1].name,
+                            value: geoCoordMap[dataItem[1].name].concat([dataItem[1].value])
+                        };
+                    })
+                }
+                );
+            });
+            return {
+                tooltip: {
+                    trigger: 'item',
+                    backgroundColor: '#F0F8FF',
+                    borderWidth: 1,
+                    textStyle: { color: '#000' },
+                    formatter: function (item) {
+                        if (item.value) {
+                            return item.name + " 案件数:" + item.value[2];
+                        }
+                    }
+                },
+                dataRange: {
+                    min: 0,
+                    max: 100,
+                    calculable: true,
+                    color: ['red', 'green', 'blue', 'orange', 'yellow'],
+                    show:false
+                },
+                animationDuration:3000,
+                series: series
+            };
+        }
+        //获取案件发送地的坐标数据
+        var fromPos = function (from, data) {
+            for (var i = 0; i < data.length; i++) {
+                if (data[i].name == from) {
+                    return data[i];
+                }
+            }
+        }
+        //设置案件+1或者-1的动画效果
+        function caseUpdateAnim(coord, count,handle) {
+            var m = new maptalks.Label(handle+count, coord, {
+                box: false,
+                symbol: {
+                    'textWeight': 'bold',
+                    'textFaceName': '"microsoft yahei",arial,sans-serif',
+                    'textFill': '#ff0000',
+                    'textSize': 18,
+                    'textOpacity': 1,
+                    'textDy': -20
+                }
+            }).addTo(v);
+            m.animate({
+                'symbol': {
+                    'textOpacity': 0,
+                    'textDy': -40
+                }
+            },{
+                speed: 3000,
+                easing: 'linear'
+            });
+            setTimeout(function () {
+                v.removeGeometry(m);
+            }, 4000);
+        }
+        //当案件到达处理地点的时候显示增加案件动画效果
+        function setCaseAnim(from,to, echartsoption) {
+            var index = getFromTo(from, to, echartsoption.series[0].data);
+            if (!index) {
+                console.log("派发路径不存在!");
+                return false;
+            }
+            var _frompos = fromPos(from, echartsoption.series[2].data);
+            _frompos.value[2] -= 1;
+            caseUpdateAnim([_frompos.value[0], _frompos.value[1]], 1, "-");
+            echartsoption.series[0].data[index].effect = {
+                opacity: 1,
+                color: "#f43c3c"
+            }
+            echartsoption.series[1].data[index].effect = {
+                opacity: 1,
+                symbol: "image://../images/send-for.png"
+            }
+            var clearAnim=setTimeout(function () {
+                echartsoption.series[2].data[index].value[2] += 1;
+                echartsoption.series[1].data[index].effect = {
+                    opacity: 0
+                }
+                echartsoption.series[0].data[index].effect = {
+                    opacity: 0
+                }
+                e3Layer.setEChartsOption(echartsoption);
+                clearTimeout(clearAnim);
+                map.config('zoomable', true)
+            }, period * 1000 + 2000);
+            timeControllers.push(clearAnim);
+            setTimeout(function () {
+                caseUpdateAnim([echartsoption.series[2].data[index].value[0], echartsoption.series[2].data[index].value[1]], 1, "+");
+            }, period * 1000 + 1000)
+            return true;
+        }
+        //添加输入控件
+        function sendCase() {
+            var elSend = '从:<select id="from"  class="search-input"></select>派发到:<select id="to" class="search-input"></select><input id="send" type="button" class="search-submit" value="派发"/>';
+            var html = '<div id="searchPanel" class="search-panel">' + elSend + '</div>';
+            var sendbox = new maptalks.control.Panel({
+                'position': { 'top': '20', 'left': '50' },
+                'draggable': false,
+                'custom': true,
+                'content': html
+            });
+            map.addControl(sendbox);
+            var selects = document.getElementsByClassName("search-input");
+            for (var i = 0; i < selects.length; i++) {
+                for (var p in geoCoordMap) {
+                    var op = document.createElement("option");
+                    op.innerHTML = p;
+                    selects.item(i).appendChild(op);
+                }
+            }
+        }
+        //计时器管理
+        function ClearTime() {
+            var t = timeControllers.pop();
+            while (t) {
+                clearTimeout(t);
+                t = timeControllers.pop();
+            }
+        }
+        function getFromTo(from,to,data){
+            for (var i = 0; i < data.length; i++) {
+                if (from != to) {
+                    if (data[i].fromName == from && data[i].toName == to)
+                        return i;
+                }
+            }
+        }
+        $(function () {
+            initMap();
+            sendCase();
+            $("#send").click(function () {
+                //案件派发过程中禁用缩放，防止重绘
+                map.config('zoomable', false);
+                var echartsoption = e3Layer.getEChartsOption();
+                echartsoption.series[0].data.forEach(function (item) {
+                    item.effect = { opacity: 0 };
+                });
+                echartsoption.series[1].data.forEach(function (item) {
+                    item.effect = { opacity: 0 };
+                });
+                ClearTime();
+                e3Layer.setEChartsOption(echartsoption);
+                var from = document.getElementById("from").value;
+                var to = document.getElementById("to").value;
+                if (setCaseAnim(from, to, echartsoption)) {
+                    e3Layer.setEChartsOption(echartsoption);
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <div id="map"></div>
+</body>
+</html>

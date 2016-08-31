@@ -1,0 +1,108 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>GPS点</title>
+    <meta charset="utf-8" />
+    <link href="../css/maptalks.css" rel="stylesheet" />
+    <style type="text/css">
+        html, body {
+            margin: 0px;
+            background-color: black;
+            height: 100%;
+            width: 100%;
+        }
+
+        #map {
+            width: 100%;
+
+
+            height: 100%;
+        }
+    </style>
+    <script src="../maptalks.js"></script>
+    <script src="../maptalks.e3.js"></script>
+    <script src="../test_data/bus.js"></script>
+    <script src="../js/echarts.min.js"></script>
+    <script src="../js/jquery-1.9.1.js"></script>
+    <script>
+            var map;
+            function mapInit() {
+                //构造地图类,第一个参数为加载地图的容器，例如div的id
+                var tilelayer = new maptalks.TileLayer("tile", {
+                    tileSystem: [1, -1, -400, 400],
+                    urlTemplate: 'http://116.211.31.253:8712/ArcGIS/rest/services/lt/NewBlue/MapServer/tile/{z}/{y}/{x}',
+                    subdomains: ['1', '2', '3', '4', '5']
+                });
+                map = new maptalks.Map("map", {
+                    center: [109.20749554050774, 34.36776742218806],//[109.20749554050774, 34.36776742218806], //[175.27, -37.79],
+                    zoom: 3,
+                    minZoom: 1,
+                    maxZoom: 10,
+                    view: {
+                        projection: 'EPSG:4326',
+                        resolutions: [
+                           0.0013748335334806893,
+                           0.0006874167667403447,
+                           3.4370838337017233E-4,
+                           1.7185419168508616E-4,
+                           8.592709584254308E-5,
+                           4.296354792127154E-5,
+                           2.148177396063577E-5,
+                           1.0740886980317885E-5,
+                           5.370443490158943E-6,
+                           2.684032014576556E-6
+                        ],
+                        fullExtent: {
+                            'top': 90,
+                            'bottom': 0,
+                            'left': 0,
+                            'right': 180
+                        }
+                    },
+                    zoomBackground: false,
+                    baseLayer: tilelayer
+                });
+                loadJSONAndDraw();
+            }
+            function loadJSONAndDraw() {
+                //var series = [];
+                var Lines = [];
+                $.get('../test_data/gps.json', function (data) {
+                    var len=data.Lines.length;
+                    for (var i = 0; i < len; i++) {
+                        var line=data.Lines[i];
+                        var leng=line.Points.length;
+                        for (var j = 0; j < leng-1; j++) {
+                            Lines.push([[line.Points[j].COORX, line.Points[j].COORY], [line.Points[j + 1].COORX, line.Points[j + 1].COORY]]);
+                        }
+                        //var serie = 
+                        //series.push(serie);
+                    }
+                    var option = {
+                        series: [{
+                            type: 'lines',
+                            coordinateSystem: 'geo',
+                            data: Lines,
+                            large: true,
+                            largeThreshold: 100,
+                            lineStyle: {
+                                normal: {
+                                    opacity: 0.1,
+                                    width: 0.5,
+                                    curveness: 0.1,
+                                }
+                            },
+                            // 设置混合模式为叠加
+                            blendMode: 'lighter'
+                        }]
+                    };
+                    var e3Layer = new maptalks.E3Layer('e3', option).addTo(map);
+                });
+            }
+    </script>
+</head>
+<body onload="mapInit()">
+    <div id="map"></div>
+</body>
+</html>

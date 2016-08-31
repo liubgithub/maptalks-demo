@@ -1,0 +1,89 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Arcgis瓦片地图服务</title>
+    <meta charset="utf-8" />
+    <link href="../css/maptalks.css" rel="stylesheet" />
+    <style type="text/css">
+        html, body {
+            margin: 0px;
+            background-color: black;
+            height: 100%;
+            width: 100%;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <script src="../maptalks.js"></script>
+    <script src="../js/jquery-1.9.1.js"></script>
+    <script type="text/javascript">
+        var map;
+        function initMap() {
+            //map = new maptalks.Map("map", {
+            //    center: [109.20749554050774, 34.36776742218806],//[109.20749554050774, 34.36776742218806], //[175.27, -37.79],
+            //    zoom: 3,
+            //    minZoom: 1,
+            //    maxZoom: 10,
+            //    view: {
+            //        projection: 'EPSG:4326',
+            //        resolutions: [
+            //           0.0013748335334806893,
+            //           0.0006874167667403447,
+            //           3.4370838337017233E-4,
+            //           1.7185419168508616E-4,
+            //           8.592709584254308E-5,
+            //           4.296354792127154E-5,
+            //           2.148177396063577E-5,
+            //           1.0740886980317885E-5,
+            //           5.370443490158943E-6,
+            //           2.684032014576556E-6
+            //        ],
+            //        fullExtent: {
+            //            'top': 90,
+            //            'bottom': 0,
+            //            'left': 0,
+            //            'right': 180
+            //        }
+            //    },
+            //    baseLayer: new maptalks.TileLayer("tile", {
+            //        tileSystem: [1, -1, -400, 400],
+            //        urlTemplate: 'http://116.211.31.253:8712/ArcGIS/rest/services/lt/NewBlue/MapServer/tile/{z}/{y}/{x}',
+            //        subdomains: ['1', '2', '3', '4', '5']
+            //    })
+            //});
+            var serverUrl = 'http://116.211.31.253:8712/ArcGIS/rest/services/lt/NewBlue/MapServer';
+            var filter = '/?f=json';
+            var proxyUrl = '../proxy/tileProxy.ashx';
+            var requestUrl=proxyUrl+'?url='+serverUrl+"?filter="+filter;
+            maptalks.View.loadArcgis(requestUrl, function (err, conf) {
+                var view = conf.view;
+                view.projection = 'EPSG:4326';
+                map = new maptalks.Map("map", {
+                    center: [109.20749554050774, 34.36776742218806],
+                    zoom: 3,
+                    minZoom: 1,
+                    maxZoom: 10,
+                    overviewControl: true,
+                    view: view,
+                    baseLayer: new maptalks.TileLayer("tile", {
+                        tileSystem: conf.tileSystem,
+                        urlTemplate: 'http://116.211.31.253:8712/ArcGIS/rest/services/lt/NewBlue/MapServer/tile/{z}/{y}/{x}',
+                        subdomains: ['1', '2', '3', '4', '5']
+                    })
+                });
+            });
+        }
+
+        $(function () {
+            initMap();
+        });
+    </script>
+</head>
+<body>
+    <div id="map"></div>
+</body>
+</html>

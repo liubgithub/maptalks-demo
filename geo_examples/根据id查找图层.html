@@ -1,0 +1,147 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>根据id查找图层</title>
+    <meta charset="utf-8" />
+    <style type="text/css">
+        html, body {
+            margin: 0px;background-color:black;
+            height: 100%;
+            width: 100%;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <script src="../maptalks.js"></script>
+    <script src="../js/jquery-1.9.1.js"></script>
+    <script type="text/javascript">
+        var map;
+        function initMap() {
+            map = new maptalks.Map("map", {
+                center: [109.20749554050774, 34.36776742218806],//[109.20749554050774, 34.36776742218806], //[175.27, -37.79],
+                zoom: 3,
+                minZoom: 1,
+                maxZoom: 10,
+                view: {
+                    projection: 'EPSG:4326',
+                    resolutions: [
+                       0.0013748335334806893,
+                       0.0006874167667403447,
+                       3.4370838337017233E-4,
+                       1.7185419168508616E-4,
+                       8.592709584254308E-5,
+                       4.296354792127154E-5,
+                       2.148177396063577E-5,
+                       1.0740886980317885E-5,
+                       5.370443490158943E-6,
+                       2.684032014576556E-6
+                    ],
+                    fullExtent: {
+                        'top': 90,
+                        'bottom': 0,
+                        'left': 0,
+                        'right': 180
+                    }
+                },
+                baseLayer: new maptalks.TileLayer("tile", {
+                    tileSystem: [1, -1, -400, 400],
+                    urlTemplate: 'http://116.211.31.253:8712/ArcGIS/rest/services/lt/NewBlue/MapServer/tile/{z}/{y}/{x}',
+                    subdomains: ['1', '2', '3', '4', '5']
+                })
+            });
+        }
+
+        $(function () {
+            initMap();
+            var layer_v1 = new maptalks.VectorLayer('v1');
+            map.addLayer(layer_v1);
+            var marker = new maptalks.Marker([109.21749554050774, 34.35776742218806],
+                     {
+                         draggable: false,
+                         symbol: [{
+                          'textName': '图标图层',
+                          'textVerticalAlignment': 'bottom'
+                      },
+                      {
+                          'markerFile': '../images/marker-icon.png'
+                      },
+                      {
+                          'markerFile': '../images/marker-shadow.png',
+                          'markerDx': 8
+                      }]
+                     });
+                marker.addTo(layer_v1);
+
+                var layer_v2 = new maptalks.VectorLayer('v2');
+                map.addLayer(layer_v2);
+                new maptalks.Marker(
+                [109.19749554050774, 34.37776742218806],
+                  {
+                      draggable: true,
+                      symbol: {
+                          "textName": "文本图层",
+                          "textFaceName": "arial",
+                          "textSize": "20",
+                          "textFill": "#ff0ee1",
+                          "textOpacity": 1,
+                          "textHaloFill": "#fff",
+                          "textHaloRadius": 3,
+                          "textDx": 0,
+                          "textDy": 0,
+                          "textHorizontalAlignment": "middle", //left | middle | right | auto
+                          "textVerticalAlignment": "middle",   // top | middle | bottom | auto
+                          "textAlign": "left" //left | right | center | auto
+                      }
+                  }).addTo(layer_v2);
+
+
+                var layer_v3 = new maptalks.VectorLayer('v3');
+                map.addLayer(layer_v3);
+                 // 多边形图层
+                new maptalks.Polygon(
+                        //面端点坐标数组
+                        [[
+                            [109.18053653961283, 34.324244899384889],
+                            [109.20049362426856, 34.3138559229494186],
+                            [109.19032123809872, 34.3036210614999653],
+                            [109.19366863494917, 34.3142926029397037],
+                            [109.18577221160967, 34.3143880093267567],
+                            [109.18053653961283, 34.324244899384889]
+                        ]
+                        ],
+                        {
+                            draggable: true,
+                            symbol: {
+                                'lineColor': '#000000',
+                                'lineWidth': 2,
+                                'lineOpacity': 1,
+                                'polygonFill': 'rgb(255, 0, 0)',
+                                'polygonOpacity': 0.5
+                            }
+                        }).addTo(layer_v3);
+
+                //根据id.查找到图层后闪烁
+                $('#findLayer').click(function (e) {
+                    var fid = document.getElementById('layerId').value;
+                    var layer = map.getLayer(fid);
+                    if (!layer)
+                        return;
+                    var geo = layer.getGeometries()[0];
+                    geo.flash();
+                });
+        });
+    </script>
+</head>
+<body style="background-color:black"><select id="layerId" style="width:100px">
+    <option value="v1">v1图层</option>
+    <option value="v2">v2图层</option>
+    <option value="v3">v3图层</option>
+</select>
+    <input id="findLayer" type="button" value="查找指定图层" style="width:130px;"/>
+    <div id="map"></div>
+</body>
+</html>

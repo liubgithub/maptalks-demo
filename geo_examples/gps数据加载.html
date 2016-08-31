@@ -1,0 +1,152 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>GPS数据加载</title>
+    <meta charset="utf-8" />
+    <link href="../css/maptalks.css" rel="stylesheet" />
+    <style type="text/css">
+        html, body {
+            margin: 0px;
+            background-color: black;
+            height: 100%;
+            width: 100%;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <script src="../js/jquery-1.9.1.js"></script>
+    <script src="../js/JQuery.PJtools.min.js"></script>
+    <script src="../maptalks.js"></script>
+    <script src="../maptalks.clusterlayer.js"></script>
+    <script type="text/javascript">
+        var map;
+        var mlayer = new maptalks.VectorLayer('mlayer');
+        function initMap() {
+            map = new maptalks.Map("map", {
+                center: [109.20749554050774, 34.36776742218806],
+                zoom: 3,
+                minZoom: 1,
+                maxZoom: 10,
+                view: {
+                    projection: 'EPSG:4326',
+                    resolutions: [
+                       0.0013748335334806893,
+                       0.0006874167667403447,
+                       3.4370838337017233E-4,
+                       1.7185419168508616E-4,
+                       8.592709584254308E-5,
+                       4.296354792127154E-5,
+                       2.148177396063577E-5,
+                       1.0740886980317885E-5,
+                       5.370443490158943E-6,
+                       2.684032014576556E-6
+                    ],
+                    fullExtent: {
+                        'top': 90,
+                        'bottom': 0,
+                        'left': 0,
+                        'right': 180
+                    }
+                },
+                zoomBackground: false,
+                baseLayer: new maptalks.TileLayer("tile", {
+                    tileSystem: [1, -1, -400, 400],
+                    urlTemplate: 'http://116.211.31.253:8712/ArcGIS/rest/services/lt/NewBlue/MapServer/tile/{z}/{y}/{x}',
+                    subdomains: ['1', '2', '3', '4', '5']
+                })
+            });
+            map.addLayer(mlayer);
+        }
+        //时间格式化
+        function getNowFormatDate() {
+            var date = new Date();
+            var seperator1 = "/";
+            var seperator2 = ":";
+            var month = date.getMonth() + 1;
+            var strDate = date.getDate();
+            if (month >= 1 && month <= 9) {
+                month = "0" + month;
+            }
+            if (strDate >= 0 && strDate <= 9) {
+                strDate = "0" + strDate;
+            }
+            var currentdate = date.getFullYear() + seperator1 + month + seperator1 + strDate
+                    + " " + date.getHours() + seperator2 + date.getMinutes()
+                    + seperator2 + date.getSeconds();
+            return currentdate;
+        }
+        function jsonUnEscape(json) {
+            /// <summary>Json对象解密编码</summary>
+            /// <param name="json" type="Object">加密Json对象</param>
+            /// <returns type="Object" />
+
+            for (var name in json) {
+                if (typeof json[name] == 'string') {
+                    json[name] = unescape(json[name]);
+                }
+                else {
+                    for (var obj in json[name]) {
+                        if (typeof json[name][obj] == "string") {
+                            json[name][obj] = unescape(json[name][obj]);
+                        }
+                        else {
+                            for (var key in json[name][obj]) {
+                                json[name][obj][key] = unescape(json[name][obj][key]);
+                            }
+                        }
+                    }
+                }
+            }
+            return json;
+        }
+
+        function toTime(from,interval) {
+            var t = from.split(':');
+            var minute = parseInt(t[2]) + interval;
+            var h = t[0].split(' ');
+            if (minute >= 60) {
+                minute = minute - 60;
+                t[1] = parseInt(t[1]) + 1;
+                if (t[1] >= 60) {
+                    t[1] = t[1] - 60;
+                    h[1] = parseInt(h[1]) + 1;
+                }
+            }
+            return h[0] + " " + h[1] + ":" + t[1] + ":" + minute;
+        }
+        $(function () {
+            initMap();
+            var now = getNowFormatDate();
+            var from = "2016/4/23 20:51:29";
+            var to;
+            setInterval(function () {
+                to = !to ? toTime(from, 3) : toTime(to, 20);
+                maptalks.Ajax.post({ url: "../proxy/gpsservice.ashx" }, "from=" + encodeURIComponent(from) + "&to=" + encodeURIComponent(to),
+                function (err, response) {
+                    var data = maptalks.Util.parseJSON(response);
+                    var rows = jsonUnEscape(data.TABLE);
+                    mlayer.removeGeometry();
+                    rows.forEach(function (item) {
+                        var m = new maptalks.Marker([item.COORX, item.COORY], {
+                            'symbol': {
+                                markerType: 'ellipse',
+                                markerWidth: 8,
+                                markerHeight: 8,
+                                markerFill: "#FF82AB",
+                                markerLineColor: "#FFD39B"
+                            }
+                        }).addTo(mlayer);
+                    });
+                });
+            }, 3 * 1000);
+        });
+    </script>
+</head>
+<body>
+    <div id="map"></div>
+</body>
+</html>

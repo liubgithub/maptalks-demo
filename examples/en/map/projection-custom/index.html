@@ -1,0 +1,147 @@
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1000">
+<title>Map - Customized geodesic projections</title>
+<style>
+
+@import url("../../../../style.css");
+
+</style>
+</head>
+<body style="background-color:black">
+<header>
+  <div class="column">
+  </div>
+</header>
+<div class="column">
+  <h1>Customized geodesic projections</h1>
+  <div class="index">
+    <iframe sandbox="allow-popups allow-scripts allow-forms allow-same-origin" marginwidth="0" marginheight="0" style="height:500px;" scrolling="no" frameborder="0" src="raw/index.html"></iframe>
+  </div>
+  <div class="index-pop">
+    <a target="_blank" title="Open in a new window." href="raw/index.html">Open<svg height="16" width="12"><path d="M11 10h1v3c0 0.55-0.45 1-1 1H1c-0.55 0-1-0.45-1-1V3c0-0.55 0.45-1 1-1h3v1H1v10h10V10zM6 2l2.25 2.25-3.25 3.25 1.5 1.5 3.25-3.25 2.25 2.25V2H6z"></path></svg></a>
+    <a target="_blank" title="Edit in a new window." href="raw/index.html">Edit<svg height="16" width="12"><path d="M11 10h1v3c0 0.55-0.45 1-1 1H1c-0.55 0-1-0.45-1-1V3c0-0.55 0.45-1 1-1h3v1H1v10h10V10zM6 2l2.25 2.25-3.25 3.25 1.5 1.5 3.25-3.25 2.25 2.25V2H6z"></path></svg></a>
+  </div>
+  <div class="gist-readme" data-key="README.md"></div>
+  <div class="gist-sources">
+    <div class="gist-source" data-key="index.html">
+      <h2>index.html<a name="index.html" class="anchor" href="#index.html">#</a></h2>
+
+      <pre>
+          <code class="html xml">
+&lt;div id&#x3D;&quot;map&quot;&gt;&lt;/div&gt;
+&lt;script src&#x3D;&quot;http://d3js.org/d3.v3.min.js&quot;&gt;&lt;/script&gt;
+&lt;script src&#x3D;&quot;http://d3js.org/d3.geo.projection.v0.min.js&quot;&gt;&lt;/script&gt;
+&lt;script src&#x3D;&quot;http://d3js.org/topojson.v1.min.js&quot;&gt;&lt;/script&gt;</code>
+      </pre>
+    </div>
+    <div class="gist-source" data-key="index.js">
+      <h2>index.js<a name="index.js" class="anchor" href="#index.js">#</a></h2>
+      <pre>
+          <code class="lang-js">
+//Van der Grinten IV projection from D3
+//http://bl.ocks.org/mbostock/4489365
+var d3Projection &#x3D;  d3.geo.vanDerGrinten4()
+                    .scale(148)
+                    .precision(.1);
+
+//convert to a maptalks projection object
+var proj &#x3D; {
+  project : function (c) {
+    var pc &#x3D; d3Projection([c.x, c.y]);
+    return new maptalks.Coordinate(pc[0], pc[1]);
+  },
+  unproject : function (pc) {
+    var c &#x3D; d3Projection.invert([pc.x, (pc.y)]);
+    if (!c || isNaN(c[0]) || isNaN(c[1])) {
+      return null;
+    }
+    return new maptalks.Coordinate(c);
+  }
+};
+
+var min &#x3D; proj.project(new maptalks.Coordinate(-180, -90)),
+  max &#x3D; proj.project(new maptalks.Coordinate(180, 90)),
+  fullExtent &#x3D; {
+    &#x27;top&#x27;   : max.y,
+    &#x27;left&#x27;  : min.x,
+    &#x27;right&#x27; : max.x,
+    &#x27;bottom&#x27; : min.y
+  };
+//initialize map with a customized projection
+var map &#x3D; new maptalks.Map(&#x27;map&#x27;, {
+  center:     [0, 0],
+  zoom:  2,
+  view:{
+    &#x27;projection&#x27;: proj,
+    &#x27;resolutions&#x27;: (function () {
+      var resolutions &#x3D; [];
+      for (var i &#x3D; 0; i &lt; 10; i++) {
+        resolutions[i] &#x3D; 4 / Math.pow(2, i);
+      }
+      return resolutions;
+    })(),
+    &#x27;fullExtent&#x27;: fullExtent
+  }
+});
+
+d3.json(&#x27;world-50m.json&#x27;, function (error, world) {
+  if (error) throw error;
+  var featureCollection &#x3D; topojson.feature(world, world.objects.countries),
+    geometries &#x3D; maptalks.GeoJSON.toGeometry(featureCollection);
+  var symbol &#x3D; {
+    &#x27;lineColor&#x27; : &#x27;#fff&#x27;,
+    &#x27;lineWidth&#x27; : 0.5,
+    &#x27;polygonOpacity&#x27; : 0.4,
+    &#x27;polygonFill&#x27;    : &#x27;#000&#x27;
+  };
+  var vectors &#x3D; new maptalks.VectorLayer(&#x27;v&#x27;, {&#x27;geometryEvents&#x27;:false, &#x27;enableSimplify&#x27;:false})
+      .addGeometry(geometries)
+      .forEach(function (g) {
+        g.config(&#x27;antiMeridian&#x27;, &#x27;split&#x27;)
+         .setSymbol(symbol);
+      })
+      .addTo(map);
+  //center marker
+  new maptalks.VectorLayer(&#x27;c&#x27;)
+      .addGeometry(new maptalks.Marker(map.getCenter()))
+      .addTo(map);
+});
+</code>
+      </pre>
+    </div>
+    <div class="gist-source" data-key="index.css">
+      <h2>index.css<a name="index.css" class="anchor" href="#index.css">#</a></h2>
+      <pre>
+          <code class="lang-css">
+html,
+body {
+    margin: 0px;background-color:black
+    height: 100%;
+    width: 100%;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+}
+</code>
+      </pre>
+    </div>
+  </div>
+  <div class="gist-license">
+    <h2>LICENSE<a name="license" class="anchor" href="#license">#</a></h2>
+    Based on <a target="_blank" href="http://bl.ocks.org">bl.ocks.org</a>.<br>
+    Released under the <a target="_blank" href="https://opensource.org/licenses/GPL-3.0">GNU General Public License, version 3</a>.
+  </div>
+</div>
+<script type="text/javascript" src="../../../../highlight.min.js"></script>
+<script>
+  var codes = document.getElementsByTagName("code");
+  for (var i = 0; i < codes.length; i++) {
+    hljs.highlightBlock(codes[i]);
+  }
+</script>
+</body>
+</html>

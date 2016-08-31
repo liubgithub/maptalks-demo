@@ -1,0 +1,127 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Hello, World</title>
+    <style type="text/css">
+        html, body {
+            margin: 0px;
+            height: 100%;
+            width: 100%;
+        }
+        #map {
+            background-color:black;
+            width: 50%;
+            height: 100%;
+            float:left;
+        }
+        #map1 {
+            width:50%;
+            height: 100%;
+        }
+    </style>
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=0987f46c67dfc4506f6abbc3c286a8d6"></script>
+     <script type="text/javascript" src="http://developer.baidu.com/map/jsdemo/demo/convertor.js"></script>
+    <script src="../maptalks.js"></script>
+    <script src="../chncrs.js"></script>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="map1"></div>
+    <script type="text/javascript">
+        map0 = new maptalks.Map("map", {
+            center: [109.255287, 34.376231],//[109.20749554050774, 34.36776742218806], //[175.27, -37.79],
+            zoom: 3,
+            minZoom: 1,
+            maxZoom: 10,
+            view: {
+                projection: 'EPSG:4326',
+                resolutions: [
+                   0.0013748335334806893,
+                   0.0006874167667403447,
+                   3.4370838337017233E-4,
+                   1.7185419168508616E-4,
+                   8.592709584254308E-5,
+                   4.296354792127154E-5,
+                   2.148177396063577E-5,
+                   1.0740886980317885E-5,
+                   5.370443490158943E-6,
+                   2.684032014576556E-6
+                ],
+                fullExtent: {
+                    'top': 90,
+                    'bottom': 0,
+                    'left': 0,
+                    'right': 180
+                }
+            },
+            baseLayer: new maptalks.TileLayer("tile", {
+                tileSystem: [1, -1, -400, 400],
+                urlTemplate: 'http://116.211.31.253:8712/ArcGIS/rest/services/lt/NewBlue/MapServer/tile/{z}/{y}/{x}',
+                subdomains: ['1', '2', '3', '4', '5']
+            })
+        });
+        var vlayer = new maptalks.VectorLayer('v').addTo(map0);
+        var map1 = new BMap.Map("map1");// 创建地图实例
+        map1.setDefaultCursor("crosshair");
+        var point = new BMap.Point(109.255287, 34.376231);// 创建点坐标
+        var clickPoint;
+        var bdMarker, mtkMarker, transMarker;
+        map1.addEventListener('click', function (e) {
+            if (bdMarker) {
+                map1.removeOverlay(bdMarker);
+            }
+            if (mtkMarker)
+                vlayer.removeGeometry(mtkMarker);
+            if (transMarker)
+                vlayer.removeGeometry(transMarker);
+            clickPoint = e.point;
+            bdMarker = new BMap.Marker(clickPoint);
+            mtkMarker = new maptalks.Marker([clickPoint.lng, clickPoint.lat], {
+                draggable: false,
+                symbol: [
+                 {
+                 'textName': '百度坐标',
+                 'textVerticalAlignment': 'bottom',
+                 'textFill': '#fff'
+                 }, {
+                     'markerFile': '../css/images/resource/marker.png'
+                 },
+                 {
+                   'markerFile': '../images/marker-shadow.png',
+                   'markerDx': 8
+                 }]
+            });
+            var coord = maptalks.CRSTransform.transform([clickPoint.lng, clickPoint.lat], 'BD09LL', 'WGS84');
+            transMarker = new maptalks.Marker(
+                       [coord[0], coord[1]],
+                       {
+                           draggable: false,
+                           symbol: [
+                        {
+                            'textName': '百度转WGS84后的点',
+                            'textVerticalAlignment': 'bottom',
+                            'textFill':'#fff'
+                        },
+                        {
+                            'markerFile': '../images/marker-icon.png'
+                        },
+                        {
+                            'markerFile': '../images/marker-shadow.png',
+                            'markerDx': 8
+                        }]
+                       }
+                   ).addTo(vlayer);
+             map1.addOverlay(bdMarker);
+             vlayer.addGeometry(mtkMarker);
+        });
+        map1.addEventListener("dragend", function () {
+            var center = map1.getCenter();
+            map0.setCenter([center.lng, center.lat]);
+        });
+        map1.centerAndZoom(point, 15);// 初始化地图，设置中心点坐标和地图级别
+        map1.enableScrollWheelZoom(true);
+    </script>
+</body>
+</html>

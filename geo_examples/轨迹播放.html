@@ -1,0 +1,152 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>轨迹播放</title>
+    <meta charset="utf-8" />
+    <link href="../css/player.css" rel="stylesheet" />
+    <style type="text/css">
+        html, body {
+            margin: 0px;background-color:black;
+            height: 100%;
+            width: 100%;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <script src="../maptalks.js"></script>
+    <script src="../maptalks.routeplayer.js"></script>
+    <script src="../test_data/route.js"></script>
+    <script src="../js/jquery-1.9.1.js"></script>
+    <script type="text/javascript">
+        var map,player, unitTime,routePath;
+
+        //对测试数据进行一下偏移处理
+        function _processRoute(route) {
+           var routeLine = [];
+            var l=route.path.length;
+            for (var i = 0; i < l; i++) {
+                routeLine.push([route.path[i][0]-12.32, route.path[i][1]+3.11,route.path[i][2]]);
+            }
+            return {
+                'path':routeLine
+            };
+        }
+        function initMap() {
+            map = new maptalks.Map("map", {
+                center: [109.20749554050774, 34.36776742218806],//[109.20749554050774, 34.36776742218806], //[175.27, -37.79],
+                zoom: 4,
+                minZoom: 1,
+                maxZoom: 10,
+                view: {
+                    projection: 'EPSG:4326',
+                    resolutions: [
+                       0.0013748335334806893,
+                       0.0006874167667403447,
+                       3.4370838337017233E-4,
+                       1.7185419168508616E-4,
+                       8.592709584254308E-5,
+                       4.296354792127154E-5,
+                       2.148177396063577E-5,
+                       1.0740886980317885E-5,
+                       5.370443490158943E-6,
+                       2.684032014576556E-6
+                    ],
+                    fullExtent: {
+                        'top': 90,
+                        'bottom': 0,
+                        'left': 0,
+                        'right': 180
+                    }
+                },
+                baseLayer: new maptalks.TileLayer("tile", {
+                    tileSystem: [1, -1, -400, 400],
+                    urlTemplate: 'http://116.211.31.253:8712/ArcGIS/rest/services/lt/NewBlue/MapServer/tile/{z}/{y}/{x}',
+                    subdomains: ['1', '2', '3', '4', '5']
+                })
+            });
+
+        }
+
+        //给各个操作按钮绑定点击事件
+        function trackEvent() {
+            //播
+            $("#playBtn").click(function () {
+                player.play();
+                player.on('playing', function () {
+                    var coord = player.getCurrentCoordinates(0);
+                    if (!map.getExtent().contains(coord))
+                        map.setCenter(coord);
+                });
+            });
+            //暂停
+            $("#pauseBtn").click(function () {
+                player.pause();
+            });
+            //重新开始
+            $("#stopBtn").click(function () {
+                player.cancel();
+            });
+            //加速
+            $("#forwardBtn").click(function () {
+                var t = 1;
+                player.setUnitTime(unitTime * t);
+            });
+            //减速
+            $("#rewindBtn").click(function () {
+                var t = 0.5;
+                player.setUnitTime(unitTime * t);
+            });
+            //回放
+            $("#ejectBtn").click(function () {
+                player.cancel();
+                player.play();
+            });
+        }
+
+        $(function () {
+            initMap();
+            routePath = _processRoute(route);
+            player = new maptalks.RoutePlayer(routePath, map);
+            player.config({
+                markerSymbol: {
+                    'markerFile': '../images/walk_front.gif'
+                }
+            })
+            unitTime = player.getUnitTime();
+            //给各个播放控制按钮绑定事件
+            trackEvent();
+        });
+    </script>
+</head>
+<body style="background-color:black">
+    <div style="width:100%;z-index:9999;position:absolute;bottom:0px;opacity:0.6">
+        <section class="playContainer">
+            <li class="playBtn" id="playBtn">
+                <a href="#" title="start">Start</a>
+            </li>
+            <li class="pauseBtn" id="pauseBtn">
+                <a href="#" title="pause">Pause</a>
+            </li>
+            <li class="stopBtn" id="stopBtn">
+                <a href="#" title="stop">Stop</a>
+            </li>
+            <li class="forwardBtn playBtn" id="forwardBtn">
+                <a href="#" title="forward">Forward</a>
+                <a href="#" title="forward">Forward</a>
+            </li>
+            <li class="rewindBtn" id="rewindBtn">
+                <a href="#" title="rewind">Rewind</a>
+                <a href="#" title="rewind">Rewind</a>
+            </li>
+            <li class="ejectBtn" id="ejectBtn">
+                <a href="#" class="arrow">Eject</a>
+                <a href="#" class="dash">Eject</a>
+            </li>
+        </section>  
+    </div>
+    <div id="map"></div>
+</body>
+</html>
